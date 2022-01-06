@@ -15,64 +15,90 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
-#include <chrono>
+#include <fstream>
 #include <thread>
-#include <uv.h>
+
+#include "XMRigd.h"
 
 #ifdef WIN32
-    #define WIN32_LEAN_AND_MEAN  /* avoid including junk */
-    #include <windows.h>
-    #include <signal.h>
+#define WIN32_LEAN_AND_MEAN  /* avoid including junk */
+#include <windows.h>
+#include <signal.h>
 #else
-    #include <sys/wait.h>
-    #include <errno.h>
+
+#include <sys/wait.h>
+#include <errno.h>
+
 #endif
 
 #ifndef MINER_EXECUTABLE_NAME
-  #define MINER_EXECUTABLE_NAME xmrigMiner
+#define MINER_EXECUTABLE_NAME xmrigMiner
 #endif
 #define VALUE_TO_STRING(x) #x
 #define VALUE(x) VALUE_TO_STRING(x)
 
-int main(int argc, char **argv) {
+bool fileFound(const std::string& fullMinerBinaryPath)
+{
+  std::ifstream file(fullMinerBinaryPath.c_str());
+  return file.good();
+}
 
-    std::string ownPath(argv[0]);
+int main(int argc, char** argv)
+{
+
+  std::string ownPath(argv[0]);
 
 #if defined(_WIN32) || defined(WIN32)
-    int pos = ownPath.rfind('\\');
-    std::string xmrigMiner( VALUE(MINER_EXECUTABLE_NAME) ".exe");
+  int pos = ownPath.rfind('\\');
+  std::string minerBinaryName( VALUE(MINER_EXECUTABLE_NAME) ".exe");
 #else
-    int pos = ownPath.rfind('/');
-    std::string xmrigMiner( VALUE(MINER_EXECUTABLE_NAME) );
+  int pos = ownPath.rfind('/');
+  std::string minerBinaryName(VALUE(MINER_EXECUTABLE_NAME));
 #endif
 
-    std::string xmrigMinerPath = ownPath.substr(0, pos+1) + xmrigMiner;
+  std::string fullMinerBinaryPath = ownPath.substr(0, pos + 1) + minerBinaryName;
 
 #if defined(_WIN32) || defined(WIN32)
-    xmrigMinerPath = "\"" + xmrigMinerPath + "\"";
+  xmrigMinerPath = "\"" + xmrigMinerPath + "\"";
 #endif
 
-    for (int i=1; i < argc; i++){
-        xmrigMinerPath += " ";
-        xmrigMinerPath += argv[i];
+  std::string params = " --daemonized";
+  for (int i = 1; i < argc; i++)
+  {
+    params += " ";
+    params += argv[i];
+  }
+
+  int status = 0;
+
+  do
+  {
+    // apply update if we have one
+    if (fileFound(fullMinerBinaryPath + UPDATE_EXTENSION))
+    {
+      if (!std::rename(fullMinerBinaryPath.c_str(), (fullMinerBinaryPath + BACKUP_EXTENSION).c_str()))
+      {
+        if (std::rename((fullMinerBinaryPath + UPDATE_EXTENSION).c_str(), fullMinerBinaryPath.c_str()))
+        {
+          // try to rollback
+          std::rename((fullMinerBinaryPath + BACKUP_EXTENSION).c_str(), fullMinerBinaryPath.c_str());
+        }
+      }
     }
 
-    xmrigMinerPath += " --daemonized";
-
-    int status = 0;
-
-    do {
-        status = system(xmrigMinerPath.c_str());
+    status = system((fullMinerBinaryPath + params).c_str());
 #if defined(_WIN32) || defined(WIN32)
     } while (status != EINVAL && status != SIGHUP && status != SIGINT && status != 0);
 
-	if (status == EINVAL) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-	}
+    if (status == EINVAL)
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    }
 #else
 
-    } while (WEXITSTATUS(status) != EINVAL && WEXITSTATUS(status) != SIGHUP && WEXITSTATUS(status) != SIGINT && WEXITSTATUS(status) != 0);
+  } while (WEXITSTATUS(status) != EINVAL && WEXITSTATUS(status) != SIGHUP && WEXITSTATUS(status) != SIGINT &&
+           WEXITSTATUS(status) != 0);
 #endif
 }

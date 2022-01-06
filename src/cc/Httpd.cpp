@@ -30,14 +30,14 @@
 
 namespace
 {
-  void addResponseHeader(httplib::Response& res)
-  {
-    res.set_header("Access-Control-Allow-Origin", "*");
-    res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-    res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.set_header("WWW-Authenticate", "Basic");
-    res.set_header("WWW-Authenticate", "Bearer");
-  }
+void addResponseHeader(httplib::Response& res)
+{
+  res.set_header("Access-Control-Allow-Origin", "*");
+  res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.set_header("WWW-Authenticate", "Basic");
+  res.set_header("WWW-Authenticate", "Bearer");
+}
 }
 
 Httpd::Httpd(const std::shared_ptr<CCServerConfig>& config)

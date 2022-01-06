@@ -172,7 +172,7 @@ void xmrig::CCClient::publishClientStatusReport()
   if (!res)
   {
     LOG_ERR(CLEAR "%s" RED("error:unable to performRequest POST [http%s://%s:%d%s]"), Tags::cc(),
-            config.useTLS() ? "s":"", config.host(), config.port(), requestUrl.c_str());
+            config.useTLS() ? "s" : "", config.host(), config.port(), requestUrl.c_str());
   }
   else if (res->status != 200)
   {
@@ -221,7 +221,7 @@ void xmrig::CCClient::publishClientStatusReport()
         LOG_WARN(CLEAR "%s" YELLOW("Command: EXECUTE received"), Tags::cc());
       }
 
-      for (ICommandListener *listener : m_Commandlisteners)
+      for (ICommandListener* listener : m_Commandlisteners)
       {
         listener->onCommandReceived(controlCommand);
       }
@@ -280,7 +280,8 @@ void xmrig::CCClient::fetchConfig()
       }
       else
       {
-        LOG_ERR(CLEAR "%s" RED("Not able to store client config to file %s."), Tags::cc(), m_base->config()->fileName().data());
+        LOG_ERR(CLEAR "%s" RED("Not able to store client config to file %s."), Tags::cc(),
+                m_base->config()->fileName().data());
       }
     }
     else
@@ -337,12 +338,14 @@ void xmrig::CCClient::publishConfig()
     }
     else
     {
-      LOG_ERR(CLEAR "%s" RED("Not able to send config. Client config %s is broken!"), Tags::cc(), m_base->config()->fileName().data());
+      LOG_ERR(CLEAR "%s" RED("Not able to send config. Client config %s is broken!"), Tags::cc(),
+              m_base->config()->fileName().data());
     }
   }
   else
   {
-    LOG_ERR(CLEAR "%s" RED("Not able to load client config %s. Please make sure it exists! Using embedded config."), Tags::cc(),
+    LOG_ERR(CLEAR "%s" RED("Not able to load client config %s. Please make sure it exists! Using embedded config."),
+            Tags::cc(),
             m_base->config()->fileName().data());
   }
 }
@@ -376,7 +379,8 @@ std::shared_ptr<httplib::Response> xmrig::CCClient::performRequest(const std::st
              << ":"
              << config.port();
 
-  LOG_DEBUG("CCClient::performRequest %s [%s%s] send: '%.2048s'", operation.c_str(), hostHeader.str().c_str(), requestUrl.c_str(), requestBuffer.c_str());
+  LOG_DEBUG("CCClient::performRequest %s [%s%s] send: '%.2048s'", operation.c_str(), hostHeader.str().c_str(),
+            requestUrl.c_str(), requestBuffer.c_str());
 
   httplib::Request req;
   req.method = operation;
